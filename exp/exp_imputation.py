@@ -9,6 +9,7 @@ from torch import optim
 
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
+from utils.frequency import compute_pca_basis, project_onto_basis
 from utils.metrics import metric
 from utils.metrics_torch import create_metric_collector, metric_torch
 from utils.tools import (EarlyStopping, adjust_learning_rate, ensure_path,
@@ -170,6 +171,27 @@ class Exp_Imputation(Exp_Basic):
 
                     elif self.args.auxi_mode == "temp":
                         loss_auxi = outputs - batch_x
+
+                    elif self.args.auxi_mode == "pca":
+                        filled_outputs = outputs
+                        filled_x = batch_x
+
+                        if self.args.reconstruction_type in {'autoencoder', 'imputation'}:
+                            filled_outputs = torch.zeros_like(outputs)
+                            filled_x = torch.zeros_like(batch_x)
+
+                            if self.args.reconstruction_type == 'autoencoder':
+                                filled_outputs[mask == 1] = outputs[mask == 1]
+                                filled_x[mask == 1] = batch_x[mask == 1]
+                            elif self.args.reconstruction_type == 'imputation':
+                                filled_outputs[mask == 0] = outputs[mask == 0]
+                                filled_x[mask == 0] = batch_x[mask == 0]
+
+                        with torch.no_grad():
+                            basis = compute_pca_basis(filled_x)
+                        outputs_proj = project_onto_basis(filled_outputs, basis)
+                        targets_proj = project_onto_basis(filled_x, basis)
+                        loss_auxi = outputs_proj - targets_proj
                     else:
                         raise NotImplementedError
 

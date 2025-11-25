@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 import torch
+from utils.frequency import compute_pca_basis, project_onto_basis
 
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast
 from utils.metrics import metric
@@ -148,6 +149,12 @@ class Exp_Inv_Long_Term_Forecast(Exp_Long_Term_Forecast):
                         # fft shape: [B, P, D]
                         if self.args.auxi_mode == "rfft":
                             loss_auxi = outputs_freq - torch.fft.rfft(batch_y, dim=1)
+                        elif self.args.auxi_mode == "pca":
+                            with torch.no_grad():
+                                basis = compute_pca_basis(batch_y)
+                            outputs_proj = project_onto_basis(outputs_temp, basis)
+                            targets_proj = project_onto_basis(batch_y, basis)
+                            loss_auxi = outputs_proj - targets_proj
                         else:
                             raise NotImplementedError
 
