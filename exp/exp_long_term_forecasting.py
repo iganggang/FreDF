@@ -10,6 +10,7 @@ from torch import optim
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.metrics import metric
+from utils.frequency import compute_pca_basis, project_onto_basis
 from utils.metrics_torch import create_metric_collector, metric_torch
 from utils.polynomial import (chebyshev_torch, hermite_torch, laguerre_torch,
                               leg_torch)
@@ -215,9 +216,16 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         
                         elif self.args.auxi_mode == "hermite":
                             loss_auxi = hermite_torch(outputs, self.args.leg_degree, device=self.device) - hermite_torch(batch_y, self.args.leg_degree, device=self.device)
-                        
+
                         elif self.args.auxi_mode == "laguerre":
                             loss_auxi = laguerre_torch(outputs, self.args.leg_degree, device=self.device) - laguerre_torch(batch_y, self.args.leg_degree, device=self.device)
+
+                        elif self.args.auxi_mode == "pca":
+                            with torch.no_grad():
+                                basis = compute_pca_basis(batch_y)
+                            outputs_proj = project_onto_basis(outputs, basis)
+                            targets_proj = project_onto_basis(batch_y, basis)
+                            loss_auxi = outputs_proj - targets_proj
                         else:
                             raise NotImplementedError
 

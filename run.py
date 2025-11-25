@@ -104,7 +104,8 @@ if __name__ == '__main__':
     parser.add_argument('--rec_lambda', type=float, default=0., help='weight of reconstruction function')
     parser.add_argument('--auxi_lambda', type=float, default=1, help='weight of auxilary function')
     parser.add_argument('--auxi_loss', type=str, default='MAE', help='loss function')
-    parser.add_argument('--auxi_mode', type=str, default='fft', help='auxi loss mode, options: [fft, rfft]')
+    parser.add_argument('--auxi_mode', type=str, default='fft',
+                        help='auxi loss mode, options: [fft, rfft, rfft-D, rfft-2D, legendre, chebyshev, hermite, laguerre, pca]')
     parser.add_argument('--auxi_type', type=str, default='complex', help='auxi loss type, options: [complex, mag, phase, mag-phase]')
     parser.add_argument('--module_first', type=int, default=1, help='calculate module first then mean ')
     parser.add_argument('--leg_degree', type=int, default=2, help='degree of legendre polynomial')
